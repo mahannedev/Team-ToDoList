@@ -1,24 +1,19 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/utils/supabase/server'
+import { signout } from '@/actions/actions'
 
-import { useAuth } from "@/context/AuthContext"
-import { supabase } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-export default function Dashboard(){
-  const { session } = useAuth();
-  const router = useRouter();
+  if (!user) redirect('/login')
 
-  useEffect(()=>{
-    if(!session) router.push('/login');
-  },[session])
-  return(
-    <div>
-      <h1>this is the Dashboard demo</h1>
-      <button onClick={()=>supabase.auth.signOut().then(()=>router.push('/login'))}>
-        Logout
-      </button>
-    </div>
-  );
-
+  return( 
+  <div>
+   <p> Welcome, {user.email}!</p>
+    <button onClick={signout}>sign out</button>
+  </div>
+  )
 }
