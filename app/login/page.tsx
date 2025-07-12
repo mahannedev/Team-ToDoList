@@ -1,7 +1,18 @@
 import { login } from "@/actions/actions" 
+import { createClient } from "@/utils/supabase/server"
 import Link from "next/link"
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const supabase = await createClient();
+
+  const { 
+    data:{ user }
+   } = await supabase.auth.getUser();
+
+   if(user){
+    redirect('/dashboard')
+   }
   return (
     <form action={login} className="space-y-4">
       <input name="email" type="email" required placeholder="Email" className="border px-2 py-1" />

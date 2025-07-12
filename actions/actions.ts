@@ -21,27 +21,30 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (user) {
-    // Already logged in, redirect to dashboard
-    redirect('/dashboard')
-  }
-
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signUp({ email, password })
-    if(user){
+  const { error: signupError } = await supabase.auth.signUp({ email, password })
+
+  if (signupError?.message.includes('User already registered')) {
+    // Try logging in instead
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (loginError) redirect('/error')
+
+    revalidatePath('/', 'layout')
     redirect('/dashboard')
   }
-  if (error) redirect('/error')
 
+  if (signupError) {
+    redirect('/error')
+  }
+
+  // success case
   revalidatePath('/', 'layout')
   redirect('/dashboard')
 }
+
 
 export async function signout() {
   const supabase = await createClient()
