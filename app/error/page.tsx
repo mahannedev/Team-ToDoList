@@ -7,7 +7,7 @@ export default function ErrorPage() {
     <div>
     <p>sorry something went wrong</p>
   <Link href='/'>
-  click here to login
+  click here to go to the main page
   </Link>
     </div>
   )
