@@ -1,11 +1,13 @@
-// components/auth/SignupForm.tsx
 'use client'
 
-import { signup, type LoginState } from "@/actions/actions"
-import { useActionState } from "react"
+import { signup, type LoginState } from "@/actions/authActions"
+import { useActionState, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { FiMail, FiLock } from "react-icons/fi"
 import Link from "next/link"
+//zod:
+import { z } from "zod"
+import { signupSchema, type SignupFormData } from "@/schemas/signupSchema"
 
 function SubmitButton() {
     const { pending } = useFormStatus()
@@ -24,9 +26,61 @@ function SubmitButton() {
 export default function SignupForm() {
     const initialState: LoginState = { error: null }
     const [state, formAction] = useActionState(signup, initialState)
+    //states for signup error with zod 
+    const [ formData , setFormData ] = useState<SignupFormData>({email:"",password:""})
+    const [ errors,setErrors ] = useState<Partial<Record<keyof SignupFormData, string>>>({})
 
+       const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+       const { name, value } = e.target;
+       setFormData(prev => ({ ...prev, [name]: value }));
+    
+       const result = signupSchema.safeParse({ ...formData, [name]: value });
+      if (!result.success) {
+        const tree = z.treeifyError(result.error);
+        const fieldError =
+      (tree.properties as Record<keyof SignupFormData, { errors?: string[] }>)[
+        name as keyof SignupFormData
+      ]?.errors?.[0] ?? "";
+    
+        setErrors(prev => ({ ...prev, [name]: fieldError }));
+      } else {
+        setErrors(prev => ({ ...prev, [name]: "" }));
+      }
+    };
+    
+    const handleFormSubmit = (
+      e: React.FormEvent<HTMLFormElement>,
+      formData: SignupFormData,
+      setErrors: React.Dispatch<React.SetStateAction<Partial<Record<keyof SignupFormData, string>>>>
+    ) => {
+      const result = signupSchema.safeParse(formData);
+    
+      if (!result.success) {
+        e.preventDefault(); // Block form submission
+    
+        const errorTree = z.treeifyError(result.error);
+        const props = errorTree.properties ?? {};
+    
+        setErrors({
+          email: props.email?.errors?.[0] ?? "",
+          password: props.password?.errors?.[0] ?? "",
+        });
+    
+        return false;
+      }
+    
+      // Clear previous errors if form is valid
+      setErrors({ email: "", password: "" });
+      // Allow form to submit
+      return true;
+    };
+    
+    
     return (
-        <form action={formAction} className="space-y-6">
+        <form 
+        action={formAction}
+        onSubmit={(e)=>handleFormSubmit(e,formData,setErrors)}
+        className="space-y-6">
             <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     Email Address
@@ -38,11 +92,15 @@ export default function SignupForm() {
                     <input
                         name="email"
                         type="email"
-                        required
+                        value={formData.email}
+                        onChange={handleChange}
                         placeholder="your@email.com"
                         className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     />
                 </div>
+                     {errors.email && (
+                      <p className="text-sm text-red-600">{errors.email}</p>
+                    )}               
             </div>
 
             <div className="space-y-2">
@@ -56,11 +114,15 @@ export default function SignupForm() {
                     <input
                         name="password"
                         type="password"
-                        required
+                        value={formData.password}
+                        onChange={handleChange}
                         placeholder="••••••••"
                         className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     />
                 </div>
+                    {errors.password && (
+                      <p className="text-sm text-red-600">{errors.password}</p>
+                    )}                
             </div>
 
             <SubmitButton />

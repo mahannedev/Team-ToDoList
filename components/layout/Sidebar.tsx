@@ -1,6 +1,6 @@
 // components/layout/Sidebar.tsx
 import { FiUsers, FiCalendar, FiLogOut, FiUser, FiActivity } from 'react-icons/fi'
-import { signout } from '@/actions/actions'
+import { signout } from '@/actions/authActions'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import NavLink from '@/components/ui/NavLink'

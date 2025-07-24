@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
-import { signout } from '@/actions/actions'
+import { signout } from '@/actions/authActions'
 
 export default async function Projects() {
   const supabase = await createClient()

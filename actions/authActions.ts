@@ -40,6 +40,8 @@ export async function signup(
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
+    await supabase.auth.signOut();
+    
   const { error: signupError } = await supabase.auth.signUp({ email, password })
 
   if (signupError?.message.includes('User already registered')) {
