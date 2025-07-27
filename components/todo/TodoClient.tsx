@@ -1,115 +1,115 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { User } from '@supabase/supabase-js'
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 type Todo = {
-  id: string
-  title: string
-  completed: boolean
-  user_id: string
-  created_at: string
-}
+  id: string;
+  title: string;
+  completed: boolean;
+  user_id: string;
+  created_at: string;
+};
 
 export default function TodoClient() {
-  const supabase = createClient()
-  const [todos, setTodos] = useState<Todo[]>([])
-  const [newTodo, setNewTodo] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
-  const [hasFetchedOnce, setHasFetchedOnce] = useState(false)
+  const supabase = createClient();
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
   useEffect(() => {
     const fetchTodos = async () => {
       const { data, error } = await supabase
-        .from('todos')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .from("todos")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      if (error) console.error(error)
-      if (data) setTodos(data)
-      setLoading(false)
-      setHasFetchedOnce(true) // ✅ Prevent real-time duplication
-    }
+      if (error) console.error(error);
+      if (data) setTodos(data);
+      setLoading(false);
+      setHasFetchedOnce(true); // ✅ Prevent real-time duplication
+    };
 
     const getSession = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-    }
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
 
-    getSession()
-    fetchTodos()
+    getSession();
+    fetchTodos();
 
     const channel = supabase
-      .channel('realtime-todos')
+      .channel("realtime-todos")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'todos' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "todos" },
         (payload) => {
-          const newItem = payload.new as Todo
-          const oldItem = payload.old as Todo
+          const newItem = payload.new as Todo;
+          const oldItem = payload.old as Todo;
 
           setTodos((prev) => {
-            if (payload.eventType === 'INSERT') {
-              if (!hasFetchedOnce) return prev // ✅ Skip during initial load
+            if (payload.eventType === "INSERT") {
+              if (!hasFetchedOnce) return prev; // ✅ Skip during initial load
               if (!prev.find((t) => t.id === newItem.id)) {
-                return [newItem, ...prev]
+                return [newItem, ...prev];
               }
             }
 
-            if (payload.eventType === 'UPDATE') {
-              return prev.map((t) => (t.id === newItem.id ? newItem : t))
+            if (payload.eventType === "UPDATE") {
+              return prev.map((t) => (t.id === newItem.id ? newItem : t));
             }
 
-            if (payload.eventType === 'DELETE') {
-              return prev.filter((t) => t.id !== oldItem.id)
+            if (payload.eventType === "DELETE") {
+              return prev.filter((t) => t.id !== oldItem.id);
             }
 
-            return prev
-          })
-        }
+            return prev;
+          });
+        },
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   async function addTodo(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newTodo.trim() || !user) return
+    e.preventDefault();
+    if (!newTodo.trim() || !user) return;
 
     const { data, error } = await supabase
-      .from('todos')
+      .from("todos")
       .insert({ title: newTodo, completed: false, user_id: user.id })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Insert error:', error)
-      return
+      console.error("Insert error:", error);
+      return;
     }
 
     if (data && !todos.find((t) => t.id === data.id)) {
-      setTodos((prev) => [data, ...prev])
+      setTodos((prev) => [data, ...prev]);
     }
 
-    setNewTodo('')
+    setNewTodo("");
   }
 
   async function toggleComplete(todo: Todo) {
     await supabase
-      .from('todos')
+      .from("todos")
       .update({ completed: !todo.completed })
-      .eq('id', todo.id)
+      .eq("id", todo.id);
   }
 
   async function deleteTodo(id: string) {
-    await supabase.from('todos').delete().eq('id', id)
+    await supabase.from("todos").delete().eq("id", id);
   }
 
   return (
@@ -137,7 +137,7 @@ export default function TodoClient() {
             <li
               key={todo.id}
               className={`flex justify-between items-center p-2 rounded border ${
-                todo.completed ? 'bg-green-100 line-through' : 'bg-neutral-100'
+                todo.completed ? "bg-green-100 line-through" : "bg-neutral-100"
               }`}
             >
               <span
@@ -158,5 +158,5 @@ export default function TodoClient() {
         </ul>
       )}
     </div>
-  )
+  );
 }

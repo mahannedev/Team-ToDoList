@@ -1,14 +1,12 @@
-'use client'
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
 
 export default function ErrorPage() {
-  return(
+  return (
     <div>
-    <p>sorry something went wrong</p>
-  <Link href='/'>
-  click here to go to the main page
-  </Link>
+      <p>sorry something went wrong</p>
+      <Link href="/">click here to go to the main page</Link>
     </div>
-  )
+  );
 }

@@ -6,12 +6,12 @@ export default async function Home() {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
-  if(user) redirect('/dashboard')
-  return(
+  if (user) redirect("/dashboard");
+  return (
     <div>
       <p>welcome! please log in or sign up</p>
     </div>
-  )
+  );
 }
