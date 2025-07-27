@@ -14,7 +14,7 @@ export default async function SignupPage() {
       <div className='w-full md:w-1/2 bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-8'>
         <div className="max-w-lg px-4">
           <h2 className='text-white text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight'>
-            Let's Build The Bright Future.
+            Let&apos;s Build The Bright Future.
           </h2>
           <p className="mt-6 text-lg text-gray-300">
             Join us to start your journey

@@ -18,8 +18,21 @@ export default function TodoClient() {
   const [newTodo, setNewTodo] = useState('')
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false)
 
   useEffect(() => {
+    const fetchTodos = async () => {
+      const { data, error } = await supabase
+        .from('todos')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) console.error(error)
+      if (data) setTodos(data)
+      setLoading(false)
+      setHasFetchedOnce(true) // ✅ Prevent real-time duplication
+    }
+
     const getSession = async () => {
       const {
         data: { session },
@@ -38,18 +51,23 @@ export default function TodoClient() {
         (payload) => {
           const newItem = payload.new as Todo
           const oldItem = payload.old as Todo
+
           setTodos((prev) => {
             if (payload.eventType === 'INSERT') {
+              if (!hasFetchedOnce) return prev // ✅ Skip during initial load
               if (!prev.find((t) => t.id === newItem.id)) {
                 return [newItem, ...prev]
               }
             }
+
             if (payload.eventType === 'UPDATE') {
               return prev.map((t) => (t.id === newItem.id ? newItem : t))
             }
+
             if (payload.eventType === 'DELETE') {
               return prev.filter((t) => t.id !== oldItem.id)
             }
+
             return prev
           })
         }
@@ -60,17 +78,6 @@ export default function TodoClient() {
       supabase.removeChannel(channel)
     }
   }, [])
-
-  async function fetchTodos() {
-    const { data, error } = await supabase
-      .from('todos')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) console.error(error)
-    if (data) setTodos(data)
-    setLoading(false)
-  }
 
   async function addTodo(e: React.FormEvent) {
     e.preventDefault()
@@ -95,7 +102,10 @@ export default function TodoClient() {
   }
 
   async function toggleComplete(todo: Todo) {
-    await supabase.from('todos').update({ completed: !todo.completed }).eq('id', todo.id)
+    await supabase
+      .from('todos')
+      .update({ completed: !todo.completed })
+      .eq('id', todo.id)
   }
 
   async function deleteTodo(id: string) {
@@ -130,7 +140,10 @@ export default function TodoClient() {
                 todo.completed ? 'bg-green-100 line-through' : 'bg-neutral-100'
               }`}
             >
-              <span onClick={() => toggleComplete(todo)} className="cursor-pointer">
+              <span
+                onClick={() => toggleComplete(todo)}
+                className="cursor-pointer"
+              >
                 {todo.title}
               </span>
               <button
