@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check":"tsc --noEmit"
+    "type-check":"tsc --noEmit",
+    "format": "prettier . --write",        // used locally
+    "format:check": "prettier . --check"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
